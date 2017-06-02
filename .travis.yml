@@ -1,0 +1,6 @@
+language: go
+go:
+- '1.8'
+script:
+- make all
+- tools/goveralls -coverprofile=cover.out -service=travis-ci"
