@@ -9,7 +9,7 @@ VERSION ?= $(shell git describe --dirty)
 COVERDIR = ".coverage"
 TOOLDIR = "tools"
 
-export PATH := $(TOOLDIR):$(PATH)
+export PATH := $(TOOLDIR)/bin:$(PATH)
 
 all: style lint test $(BINARY)
 
@@ -33,6 +33,6 @@ test: tools
 	gocovmerge $(shell find $(COVERDIR) -name '*.out') > cover.out
 
 tools:
-	$(MAKE) -C tools
+	$(MAKE) -C $(TOOLDIR)
 
 .PHONY: tools style fmt test all

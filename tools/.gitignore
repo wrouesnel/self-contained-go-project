@@ -1,4 +1,2 @@
-/gocovmerge
-/gometalinter
-/govendor
-/goveralls
+pkg
+bin

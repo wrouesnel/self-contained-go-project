@@ -3,24 +3,38 @@
 # and to run govendor init in this folder before running govendor fetch.
 GO_SRC := $(shell find $(SOURCEDIR) -name '*.go')
 
-all: gocovmerge gometalinter govendor
+export PATH := bin:$(PATH)
 
-govendor: $(GO_SRC)
-	go build -o govendor ./vendor/github.com/kardianos/govendor
+all: bin/gocovmerge bin/gometalinter bin/govendor bin/goveralls
 
-gocovmerge: $(GO_SRC)
-	go build -o gocovmerge ./vendor/github.com/wadey/gocovmerge
+bin/govendor: $(GO_SRC)
+	GOPATH=$(shell pwd) go install github.com/kardianos/govendor
 
-gometalinter: $(GO_SRC)
-	go build -o gometalinter ./vendor/github.com/alecthomas/gometalinter
+bin/gocovmerge: $(GO_SRC)
+	GOPATH=$(shell pwd) go install github.com/wadey/gocovmerge
 
-goveralls: $(GO_SRC)
-	go build -o gometalinter ./vendor/github.com/mattn/goveralls
+bin/gometalinter: $(GO_SRC)
+	GOPATH=$(shell pwd) go install github.com/alecthomas/gometalinter
+	$(eval linters := $(shell gometalinter --help | grep -oP '  \w+  \(.+\)' | tr -s ' ' | cut -d' ' -f3 | grep -oP '[^()]+'))
+	for linter in $(linters) ; do \
+		GOPATH=$(shell pwd) go install -v $$linter ; \
+	done
 
-update:
+bin/goveralls: $(GO_SRC)
+	GOPATH=$(shell pwd) go install github.com/mattn/goveralls
+
+update: bin/govendor bin/gometalinter
 	govendor fetch -v github.com/kardianos/govendor
 	govendor fetch -v github.com/wadey/gocovmerge
-	govendor fetch -v github.com/alecthomas/gometalinter
 	govendor fetch -v github.com/mattn/goveralls
+	govendor fetch -v github.com/alecthomas/gometalinter
+	# Update may need to be run twice to update gometalinter.
+	$(eval linters := $(shell gometalinter --help | grep -oP '  \w+  \(.+\)' | tr -s ' ' | cut -d' ' -f3 | grep -oP '[^()]+'))
+	for linter in $(linters) ; do \
+		govendor fetch -v $$linter ; \
+	done
 
-.PHONY: all update
+clean:
+	rm -rf bin pkg
+
+.PHONY: all update clean
