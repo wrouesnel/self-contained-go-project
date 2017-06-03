@@ -10,7 +10,7 @@ BINARY = $(shell basename $(shell pwd))
 VERSION ?= $(shell git describe --dirty)
 
 COVERDIR = ".coverage"
-TOOLDIR = "tools/bin"
+TOOLDIR = "tools"
 
 all: style lint test $(BINARY)
 
