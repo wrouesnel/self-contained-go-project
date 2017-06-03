@@ -3,13 +3,14 @@ GO_SRC := $(shell find . -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' )
 GO_DIRS := $(shell find . -type d -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' )
 GO_PKGS := $(shell go list ./... | grep -v '/vendor/')
 
-BINARY = self-contained-go-project
+BINARY = $(shell basename $(shell pwd))
 VERSION ?= $(shell git describe --dirty)
 
 COVERDIR = ".coverage"
 TOOLDIR = "tools"
 
 export PATH := $(TOOLDIR)/bin:$(PATH)
+SHELL := env PATH=$(PATH) /bin/bash
 
 all: style lint test $(BINARY)
 
