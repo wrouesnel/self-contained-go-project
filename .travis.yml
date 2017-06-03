@@ -1,6 +1,9 @@
 language: go
 go:
 - '1.8'
+cache:
+  directories:
+  - tools/bin
 script:
-- make all
+- CONCURRENT_LINTERS=1 make all
 - tools/bin/goveralls -coverprofile=cover.out -service=travis-ci"
