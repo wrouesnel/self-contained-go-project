@@ -393,10 +393,10 @@
 			"revisionTime": "2017-02-27T22:03:11Z"
 		},
 		{
-			"checksumSHA1": "7gJHE4JrF3Z2rlm9XVOd/YffP+0=",
+			"checksumSHA1": "vHrGGP777P2fqQHr2IYwNVVRQ/o=",
 			"path": "github.com/pelletier/go-toml",
-			"revision": "e94d595cd4f0394765f92e161ea1c66680bf868e",
-			"revisionTime": "2017-06-02T04:42:09Z"
+			"revision": "fe7536c3dee2596cdd23ee9976a17c22bdaae286",
+			"revisionTime": "2017-06-02T06:55:32Z"
 		},
 		{
 			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
@@ -479,8 +479,8 @@
 		{
 			"checksumSHA1": "O5eYI3n1WdaC30AxQjETe3dAQHU=",
 			"path": "golang.org/x/tools/cover",
-			"revision": "bc6db94186c03835daa5c1c679fba599dc1f3b79",
-			"revisionTime": "2017-05-28T22:52:52Z"
+			"revision": "2a5864fcfb595b4ee9a7607f1beb25778cf64c6e",
+			"revisionTime": "2017-03-22T18:59:57Z"
 		},
 		{
 			"checksumSHA1": "p3gWsy4fQOSXGRMUHr3TnmVFias=",
@@ -551,8 +551,8 @@
 		{
 			"checksumSHA1": "TNJiDMoJEKYZyXo8Vkj37gqH5A0=",
 			"path": "golang.org/x/tools/go/vcs",
-			"revision": "bc6db94186c03835daa5c1c679fba599dc1f3b79",
-			"revisionTime": "2017-05-28T22:52:52Z"
+			"revision": "2a5864fcfb595b4ee9a7607f1beb25778cf64c6e",
+			"revisionTime": "2017-03-22T18:59:57Z"
 		},
 		{
 			"checksumSHA1": "DKr5TDU73FjKqiag3sAiVRKRfK0=",
@@ -667,10 +667,6 @@
 			"path": "honnef.co/go/tools/unused",
 			"revision": "e94d1c1a34c6b61d8d06c7793b8f22cd0dfcdd90",
 			"revisionTime": "2017-05-22T19:09:05Z"
-		},
-		{
-			"path": "inter",
-			"revision": ""
 		}
 	],
 	"rootPath": "github.com/wrouesnel/self-contained-go-project/tools"
