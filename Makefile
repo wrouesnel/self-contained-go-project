@@ -10,6 +10,7 @@ BINARY = $(shell basename $(shell pwd))
 VERSION ?= $(shell git describe --dirty)
 
 CONCURRENT_LINTERS ?= $(shell cat /proc/cpuinfo | grep processor | wc -l)
+LINTER_DEADLINE ?= 30s
 
 export PATH := $(TOOLDIR)/bin:$(PATH)
 SHELL := env PATH=$(PATH) /bin/bash
