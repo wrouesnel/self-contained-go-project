@@ -16,23 +16,29 @@ TOOL_SRCS := github.com/kardianos/govendor \
  github.com/mattn/goveralls \
  github.com/alecthomas/gometalinter
 
+METATOOL_SRCS := 
+
 GO_SRC := $(shell find $(SOURCEDIR) -name '*.go')
 
 GO := GOPATH=$(shell pwd) go
 
 DEFAULT: all
 
-bin/gometalinter: $(GO_SRC)
-	$(GO) install -v github.com/alecthomas/gometalinter
-
-tools.deps: bin/gometalinter $(GO_SRC)
-	# Generate build patterns for all the tools
-	echo -e "TOOL_SRCS+=$(shell $(get_metalinters))" > tools.deps
-	for pkg in $(TOOL_SRCS) $(shell $(get_metalinters)) ; do \
+tools.deps: $(GO_SRC)
+	# Generate build patterns for static tools
+	for pkg in $(TOOL_SRCS); do \
 		echo -e "bin/$$(basename $$pkg): $$GO_SRC\n\t\$$(GO) install -v $$pkg" ; \
-	done >> tools.deps
+	done > tools.deps
+
+metatools.deps: tools.deps bin/gometalinter $(GO_SRC)
+	# Generate build patterns for metalinters tools
+	echo -e "METATOOL_SRCS+=$(shell $(get_metalinters))" > metatools.deps
+	for pkg in $(shell $(get_metalinters)) ; do \
+		echo -e "bin/$$(basename $$pkg): $$GO_SRC\n\t\$$(GO) install -v $$pkg" ; \
+	done >> metatools.deps
 
 include tools.deps
+include metatools.deps
 	
 update:
 	# Fetch govendor, then rebuild govendor.
@@ -50,9 +56,9 @@ update-phase-2:
 	done	
 
 clean:
-	rm -rf bin pkg tools.d
+	rm -rf bin pkg tools.deps metatools.deps
 
-all: $(addprefix bin/,$(notdir $(TOOL_SRCS)))
+all: $(addprefix bin/,$(notdir $(TOOL_SRCS) $(METATOOL_SRCS) ))
 
 # TOOL_SRCS is included here since we'll never really have these files.
-.PHONY: all update clean $(TOOL_SRCS)
+.PHONY: all update clean $(TOOL_SRCS) $(METATOOL_SRCS)
