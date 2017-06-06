@@ -32,8 +32,9 @@ fmt: tools
 
 test: tools
 	@mkdir -p $(COVERDIR)
+	@rm -f $(COVERDIR)/*
 	for pkg in $(GO_PKGS) ; do \
-		go test -v -covermode count -coverprofile=$(COVERDIR)/$(echo $$pkg | tr '/' '-').out $(pkg) ; \
+		go test -v -covermode count -coverprofile=$(COVERDIR)/$$(echo $$pkg | tr '/' '-').out $$pkg ; \
 	done
 	gocovmerge $(shell find $(COVERDIR) -name '*.out') > cover.out
 
