@@ -71,8 +71,8 @@
 		{
 			"checksumSHA1": "YdtKuQqs3pDJhMxOruVxLAD/JSo=",
 			"path": "github.com/client9/misspell/cmd/misspell",
-			"revision": "1d9ab7749ee27131547244ff2f9953d235b591fb",
-			"revisionTime": "2017-05-30T22:15:07Z"
+			"revision": "59894abde931a32630d4e884a09c682ed20c5c7c",
+			"revisionTime": "2017-06-10T04:42:19Z"
 		},
 		{
 			"checksumSHA1": "ULnk7ggN82JFO0ZdBCmSsQH3Vh8=",
@@ -461,14 +461,14 @@
 		{
 			"checksumSHA1": "1MXx7WN0nA5A9v4hOFO8iLcONGo=",
 			"path": "golang.org/x/tools/cmd/goimports",
-			"revision": "2a5864fcfb595b4ee9a7607f1beb25778cf64c6e",
-			"revisionTime": "2017-03-22T18:59:57Z"
+			"revision": "011098bb9222df9796d1d4c85a8772f0bf39d741",
+			"revisionTime": "2017-06-05T05:26:59Z"
 		},
 		{
 			"checksumSHA1": "V6/A1ZOZ2GUOZcRWcXegtci2FoU=",
 			"path": "golang.org/x/tools/cmd/gotype",
-			"revision": "2a5864fcfb595b4ee9a7607f1beb25778cf64c6e",
-			"revisionTime": "2017-03-22T18:59:57Z"
+			"revision": "011098bb9222df9796d1d4c85a8772f0bf39d741",
+			"revisionTime": "2017-06-05T05:26:59Z"
 		},
 		{
 			"checksumSHA1": "nD89PLkMqA5CakR8SoDuj3iQz1M=",
