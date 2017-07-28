@@ -1,27 +1,42 @@
 
-COVERDIR = .coverage
-TOOLDIR = tools
+# COVERDIR is just a temporary working directory for coverage files
+COVERDIR = $(shell pwd)/.coverage
+# TOOLDIR is the path to where our vendored build tooling lives
+TOOLDIR = $(shell pwd)/tools
+# CMD_DIR is the presumed location of golang binaries to build i.e. cmd/myprogram
+CMD_DIR := cmd
 
+# GO_SRC is used to track source code changes for builds
 GO_SRC := $(shell find . -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' )
-GO_DIRS := $(shell find . -type d -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' )
+# GO_DIRS is used to pass package lists to gometalinter
+GO_DIRS := $(shell find . -path './vendor/*' -o -path './tools/*' -o -name '*.go' -printf "%h\n" | uniq | tr -s '\n' ' ')
+# GO_PKGS is used to run tests.
 GO_PKGS := $(shell go list ./... | grep -v '/vendor/')
+# GO_CMDS is used to build command binaries (by convention assume to be anything under cmd/)
+GO_CMDS := $(shell find $(CMD_DIR) -mindepth 1 -type d -printf "%f ")
 
-BINARY = $(shell basename $(shell pwd))
+# VERSION is calculated from git tags and inserted into built binaries.
 VERSION ?= $(shell git describe --dirty)
 
+# When using CI systems, you want to override these - especially in container
+# infrastructures.
 CONCURRENT_LINTERS ?= $(shell cat /proc/cpuinfo | grep processor | wc -l)
 LINTER_DEADLINE ?= 30s
 
 export PATH := $(TOOLDIR)/bin:$(PATH)
 SHELL := env PATH=$(PATH) /bin/bash
 
-all: style lint test $(BINARY).x86_64
+all: style lint test binary
 
-$(BINARY).x86_64: $(GO_SRC)
-	CGO_ENABLED=0 go build -a -ldflags "-extldflags '-static' -X main.Version=$(VERSION)" -o $(BINARY).x86_64 .
+# binary target builds command binaries
+binary: $(GO_CMDS)
+
+# this pattern rule builds the actual command binaries automatically.
+% : $(CMD_DIR)/% $(GO_SRC)
+	CGO_ENABLED=0 go build -a -ldflags "-extldflags '-static' -X main.Version=$(VERSION)" -o $@ ./$<
 
 style: tools
-	gometalinter --disable-all --enable=gofmt --vendor
+	gometalinter --disable-all --enable=gofmt $(GO_DIRS)
 
 lint: tools
 	@echo Using $(CONCURRENT_LINTERS) processes
@@ -41,4 +56,9 @@ test: tools
 tools:
 	$(MAKE) -C $(TOOLDIR)
 
-.PHONY: tools style fmt test all
+autogen:
+	@echo "Installing git hooks in local repository..."
+	ln -sf $(TOOLDIR)/pre-commit .git/hooks/pre-commit
+
+
+.PHONY: tools autogen style fmt test binary all
