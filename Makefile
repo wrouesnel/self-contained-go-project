@@ -6,8 +6,8 @@ RELEASEDIR = release
 
 DIRS = $(BINDIR) $(RELEASEDIR)
 
-GO_SRC := $(shell find . -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' ! -path 'bin/*' )
-GO_DIRS := $(shell find . -type d -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' ! -path 'bin/*' )
+GO_SRC := $(shell find . -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' ! -path 'bin/*' ! -path 'release/*' )
+GO_DIRS := $(shell find . -type d -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' ! -path 'bin/*' ! -path 'release/*' )
 GO_PKGS := $(shell go list ./... | grep -v '/vendor/')
 
 BINARY := $(shell basename $(shell pwd))
@@ -34,7 +34,7 @@ PLATFORMS_TEMP = $(subst -, ,$(subst /, ,$@))
 GOOS = $(word 2, $(PLATFORMS_TEMP))
 GOARCH = $(word 3, $(PLATFORMS_TEMP))
 
-CURRENT_PLATFORM := $(BINDIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY)
+CURRENT_PLATFORM := $(BINDIR)/$(BINARY)_$(VERSION_SHORT)_$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY)
 
 CONCURRENT_LINTERS ?= $(shell cat /proc/cpuinfo | grep processor | wc -l)
 LINTER_DEADLINE ?= 30s
