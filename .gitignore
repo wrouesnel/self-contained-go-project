@@ -1,3 +1,5 @@
 cover.out
 .coverage
 .idea
+bin
+release
