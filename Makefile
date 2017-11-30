@@ -12,8 +12,8 @@ PRODUCT_NAME ?= $(shell basename $(shell pwd))
 # GO_SRC is used to track source code changes for builds
 GO_SRC := $(shell find . -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' ! -path 'bin/*' ! -path 'release/*' )
 # GO_DIRS is used to pass package lists to gometalinter
-GO_DIRS := $(shell find . -type d -name '*.go' ! -path '*/vendor/*' ! -path 'tools/*' ! -path 'bin/*' ! -path 'release/*' )
-# GO_PKGS is used for testing.
+GO_DIRS := $(shell find . -path './vendor/*' -o -path './tools/*' -o -name '*.go' -printf "%h\n" | uniq | tr -s '\n' ' ')
+# GO_PKGS is used to run tests.
 GO_PKGS := $(shell go list ./... | grep -v '/vendor/')
 # GO_CMDS is used to build command binaries (by convention assume to be anything under cmd/)
 GO_CMDS := $(shell find $(CMD_DIR) -mindepth 1 -type d -printf "%f ")
