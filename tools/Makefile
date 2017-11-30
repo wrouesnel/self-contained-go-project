@@ -9,13 +9,12 @@ SHELL := env PATH=$(PATH) /bin/bash
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
 # This function is used to get the linters used by metalinter
-get_metalinters := gometalinter --help | grep -oP '  \w+  \(.+\)' | tr -s ' ' | cut -d' ' -f3 | grep -oP '[^()]+'
+get_metalinters := gometalinter --help | grep -oP '\s+\w+:\s*\(.+\)' | tr -s ' ' | cut -d' ' -f3 | grep -oP '[^()]+'
 
 # This is a list of external tools we want to vendor
 TOOL_SRCS := github.com/kardianos/govendor \
  github.com/wadey/gocovmerge \
  github.com/mattn/goveralls \
- local/numcpus \
  github.com/alecthomas/gometalinter
 
 # This is populated by imported dependencies from gometalinter

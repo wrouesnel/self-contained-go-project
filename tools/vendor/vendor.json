@@ -667,6 +667,10 @@
 			"path": "honnef.co/go/tools/unused",
 			"revision": "e94d1c1a34c6b61d8d06c7793b8f22cd0dfcdd90",
 			"revisionTime": "2017-05-22T19:09:05Z"
+		},
+		{
+			"path": "local/numcpus",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/wrouesnel/self-contained-go-project/tools"

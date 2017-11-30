@@ -36,7 +36,11 @@ GOARCH = $(word 2, $(PLATFORMS_TEMP))
 
 CURRENT_PLATFORM := $(BINDIR)/$(BINARY)_$(VERSION_SHORT)_$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY)
 
-CONCURRENT_LINTERS ?= $(shell cat /proc/cpuinfo | grep processor | wc -l)
+CONCURRENT_LINTERS ?=
+ifeq ($(CONCURRENT_LINTERS),)
+CONCURRENT_LINTERS = $(shell gometalinter --help | grep -o 'concurrency=\w*' | cut -d= -f2 | cut -d' ' -f1)
+endif
+
 LINTER_DEADLINE ?= 30s
 
 $(shell mkdir -p $(DIRS))
