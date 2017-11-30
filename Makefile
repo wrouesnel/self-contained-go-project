@@ -24,15 +24,15 @@ endif
 
 # By default this list is filtered down to some common platforms.
 platforms := $(subst /,-,$(shell go tool dist list | grep -e linux -e windows -e darwin | grep -e 386 -e amd64))
-PLATFORM_BINS := $(patsubst %,$(BINDIR)/%/$(BINARY),$(platforms))
+PLATFORM_BINS := $(patsubst %,$(BINDIR)/$(BINARY)_$(VERSION_SHORT)_%/$(BINARY),$(platforms))
 PLATFORM_DIRS := $(patsubst %,$(BINDIR)/$(BINARY)_$(VERSION_SHORT)_%,$(platforms))
 PLATFORM_TARS := $(patsubst %,$(RELEASEDIR)/$(BINARY)_$(VERSION_SHORT)_%.tar.gz,$(platforms))
 
 # These are evaluated on use, and so will have the correct values in the build
 # rule (https://vic.demuzere.be/articles/golang-makefile-crosscompile/)
-PLATFORMS_TEMP = $(subst -, ,$(subst /, ,$@))
-GOOS = $(word 2, $(PLATFORMS_TEMP))
-GOARCH = $(word 3, $(PLATFORMS_TEMP))
+PLATFORMS_TEMP = $(subst -, ,$(patsubst $(BINDIR)/$(BINARY)_$(VERSION_SHORT)_%/$(BINARY),%,$@))
+GOOS = $(word 1, $(PLATFORMS_TEMP))
+GOARCH = $(word 2, $(PLATFORMS_TEMP))
 
 CURRENT_PLATFORM := $(BINDIR)/$(BINARY)_$(VERSION_SHORT)_$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY)
 
@@ -46,15 +46,15 @@ SHELL := env PATH=$(PATH) /bin/bash
 
 all: style lint test binary
 
-binary: $(CURRENT_PLATFORM) $(BINARY)
+binary: $(BINARY)
 
-$(BINARY):
-	ln -sf $(BINDIR)/$(BINARY)_$(VERSION_SHORT)_$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY) $@
+$(BINARY): $(CURRENT_PLATFORM)
+	ln -sf $< $@
 
 $(PLATFORM_BINS): $(GO_SRC)
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -a \
 		-ldflags "-extldflags '-static' -X main.Version=$(VERSION)" \
-		-o $(BINDIR)/$(BINARY)_$(VERSION_SHORT)_$(GOOS)-$(GOARCH)/$(BINARY) .
+		-o $@ .
 
 $(PLATFORM_DIRS): $(PLATFORM_BINS)
 
