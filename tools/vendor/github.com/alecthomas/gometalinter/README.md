@@ -18,7 +18,7 @@
     - [1. Update to the latest build of gometalinter and all linters](#1-update-to-the-latest-build-of-gometalinter-and-all-linters)
     - [2. Analyse the debug output](#2-analyse-the-debug-output)
     - [3. Report an issue.](#3-report-an-issue)
-- [Details](#details)
+  - [How do I filter issues between two git refs?](#how-do-i-filter-issues-between-two-git-refs)
 - [Checkstyle XML format](#checkstyle-xml-format)
 
 <!-- /MarkdownTOC -->
@@ -54,22 +54,22 @@ It is intended for use with editor/IDE integration.
 ## Supported linters
 
 - [go vet](https://golang.org/cmd/vet/) - Reports potential errors that otherwise compile.
-- [go vet --shadow](https://golang.org/cmd/vet/#hdr-Shadowed_variables) - Reports variables that may have been unintentionally shadowed.
+- [go tool vet --shadow](https://golang.org/cmd/vet/#hdr-Shadowed_variables) - Reports variables that may have been unintentionally shadowed.
 - [gotype](https://golang.org/x/tools/cmd/gotype) - Syntactic and semantic analysis similar to the Go compiler.
+- [gotype -x](https://golang.org/x/tools/cmd/gotype) - Syntactic and semantic analysis in external test packages (similar to the Go compiler).
 - [deadcode](https://github.com/tsenart/deadcode) - Finds unused code.
 - [gocyclo](https://github.com/alecthomas/gocyclo) - Computes the cyclomatic complexity of functions.
 - [golint](https://github.com/golang/lint) - Google's (mostly stylistic) linter.
 - [varcheck](https://github.com/opennota/check) - Find unused global variables and constants.
 - [structcheck](https://github.com/opennota/check) - Find unused struct fields.
-- [aligncheck](https://github.com/opennota/check) - Warn about un-optimally aligned structures.
+- [maligned](https://github.com/mdempsky/maligned) -  Detect structs that would take less memory if their fields were sorted.
 - [errcheck](https://github.com/kisielk/errcheck) - Check that error return values are used.
+- [megacheck](https://github.com/dominikh/go-tools/tree/master/cmd/megacheck) - Run staticcheck, gosimple and unused, sharing work.
 - [dupl](https://github.com/mibk/dupl) - Reports potentially duplicated code.
 - [ineffassign](https://github.com/gordonklaus/ineffassign/blob/master/list) - Detect when assignments to *existing* variables are not used.
 - [interfacer](https://github.com/mvdan/interfacer) - Suggest narrower interfaces that can be used.
 - [unconvert](https://github.com/mdempsky/unconvert) - Detect redundant type conversions.
 - [goconst](https://github.com/jgautheron/goconst) - Finds repeated strings that could be replaced by a constant.
-- [gosimple](https://github.com/dominikh/go-tools/tree/master/cmd/gosimple) - Report simplifications in code.
-- [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 - [gas](https://github.com/GoASTScanner/gas) - Inspects source code for security problems by scanning the Go AST.
 
 Disabled by default (enable with `--enable=<linter>`):
@@ -78,32 +78,64 @@ Disabled by default (enable with `--enable=<linter>`):
 - [test](http://golang.org/pkg/testing/) - Show location of test failures from the stdlib testing module.
 - [gofmt -s](https://golang.org/cmd/gofmt/) - Checks if the code is properly formatted and could not be further simplified.
 - [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports) - Checks missing or unreferenced package imports.
+- [gosimple](https://github.com/dominikh/go-tools/tree/master/cmd/gosimple) - Report simplifications in code.
 - [lll](https://github.com/walle/lll) - Report long lines (see `--line-length=N`).
 - [misspell](https://github.com/client9/misspell) - Finds commonly misspelled English words.
+- [nakedret](https://github.com/alexkohler/nakedret) - Finds naked returns.
 - [unparam](https://github.com/mvdan/unparam) - Find unused function parameters.
 - [unused](https://github.com/dominikh/go-tools/tree/master/cmd/unused) - Find unused variables.
 - [safesql](https://github.com/stripe/safesql) - Finds potential SQL injection vulnerabilities.
+- [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 
 Additional linters can be added through the command line with `--linter=NAME:COMMAND:PATTERN` (see [below](#details)).
 
 ## Configuration file
 
 gometalinter now supports a JSON configuration file which can be loaded via
-`--config=<file>`. The format of this file is determined by the Config struct
-in `config.go`.
+`--config=<file>`. The format of this file is determined by the `Config` struct
+in [config.go](https://github.com/alecthomas/gometalinter/blob/master/config.go).
 
 The configuration file mostly corresponds to command-line flags, with the following exceptions:
 
 - Linters defined in the configuration file will overlay existing definitions, not replace them.
-- "Enable" defines the exact set of linters that will be enabled.
+- "Enable" defines the exact set of linters that will be enabled (default
+  linters are disabled). `--help` displays the list of default linters with the exact names
+  you must use.
 
 Here is an example configuration file:
 
 ```json
 {
-  "DisableAll": true,
   "Enable": ["deadcode", "unconvert"]
 }
+```
+
+### Adding Custom linters
+
+Linters can be added and customized from the config file using the `Linters` field.
+Linters supports the following fields:
+
+* `Command` - the path to the linter binary and any default arguments
+* `Pattern` - a regular expression used to parse the linter output
+* `IsFast` - if the linter should be run when the `--fast` flag is used
+* `PartitionStrategy` - how paths args should be passed to the linter command:
+  * `directories` - call the linter once with a list of all the directories
+  * `files` - call the linter once with a list of all the files
+  * `packages` - call the linter once with a list of all the package paths
+  * `files-by-package` - call the linter once per package with a list of the
+    files in the package.
+  * `single-directory` - call the linter once per directory
+
+The config for default linters can be overridden by using the name of the
+linter.
+
+Additional linters can be configured via the command line using the format
+`NAME:COMMAND:PATTERN`.
+
+Example:
+
+```
+$ gometalinter --linter='vet:go tool vet -printfuncs=Infof,Debugf,Warningf,Errorf:PATH:LINE:MESSAGE' .
 ```
 
 ## Installing
@@ -169,7 +201,8 @@ Install all known linters:
 $ gometalinter --install
 Installing:
   structcheck
-  aligncheck
+  maligned
+  nakedret
   deadcode
   gocyclo
   ineffassign
@@ -291,19 +324,19 @@ failing.
 Failing all else, if the problem looks like a bug please file an issue and
 include the output of `gometalinter --debug`.
 
-## Details
+### How do I filter issues between two git refs?
 
-Additional linters can be configured via the command line:
+[revgrep](https://github.com/bradleyfalzon/revgrep) can be used to filter the output of `gometalinter`
+to show issues on lines that have changed between two git refs, such as unstaged changes, changes in
+`HEAD` vs `master` and between `master` and `origin/master`. See the project's documentation and `-help`
+usage for more information.
 
 ```
-$ gometalinter --linter='vet:go tool vet -printfuncs=Infof,Debugf,Warningf,Errorf {path}:PATH:LINE:MESSAGE' .
-stutter.go:21:15:warning: error return value not checked (defer a.Close()) (errcheck)
-stutter.go:22:15:warning: error return value not checked (defer a.Close()) (errcheck)
-stutter.go:27:6:warning: error return value not checked (doit()           // test for errcheck) (errcheck)
-stutter.go:9::warning: unused global variable unusedGlobal (varcheck)
-stutter.go:13::warning: unused struct field MyStruct.Unused (structcheck)
-stutter.go:12:6:warning: exported type MyStruct should have comment or be unexported (golint)
-stutter.go:16:6:warning: exported type PublicUndocumented should have comment or be unexported (deadcode)
+go get -u github.com/bradleyfalzon/revgrep/...
+gometalinter |& revgrep               # If unstaged changes or untracked files, those issues are shown.
+gometalinter |& revgrep               # Else show issues in the last commit.
+gometalinter |& revgrep master        # Show issues between master and HEAD (or any other reference).
+gometalinter |& revgrep origin/master # Show issues that haven't been pushed.
 ```
 
 ## Checkstyle XML format

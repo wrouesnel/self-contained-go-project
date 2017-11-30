@@ -39,10 +39,10 @@
 			"revisionTime": "2015-02-08T22:17:26Z"
 		},
 		{
-			"checksumSHA1": "zCnRL4ozOPngF6cn+bgZ9A4D+xE=",
+			"checksumSHA1": "HL3Dyr4dmbtBo+V3ULfRJMWAyoA=",
 			"path": "github.com/alecthomas/gometalinter",
-			"revision": "fed116ef099c86fa41f60754555e85b7be704033",
-			"revisionTime": "2017-05-14T07:52:09Z"
+			"revision": "212b1b91e362ea0b0e441c9b53ce31e81405c240",
+			"revisionTime": "2017-11-26T10:02:12Z"
 		},
 		{
 			"checksumSHA1": "fCc3grA7vIxfBru7R3SqjcW+oLI=",
@@ -119,8 +119,8 @@
 		{
 			"checksumSHA1": "NKvKUGq0lp/GjLS7Ffp7BAjcoTg=",
 			"path": "github.com/kardianos/govendor",
-			"revision": "c86c10d612bf08e847456ce91d495eb69ad87087",
-			"revisionTime": "2017-05-06T05:20:04Z"
+			"revision": "d644d03c4cc00cf7c88a365de8508c12ce56c392",
+			"revisionTime": "2017-11-27T22:34:05Z"
 		},
 		{
 			"checksumSHA1": "m24kWw3bFoAkKVvTjmxSLsywdHY=",
@@ -213,10 +213,10 @@
 			"revisionTime": "2016-11-30T08:01:11Z"
 		},
 		{
-			"checksumSHA1": "GPZAI/PpSx3m5De6YxataiBWBvQ=",
+			"checksumSHA1": "+ArBDwAK19OC1iDy1yEbXOC9sgQ=",
 			"path": "github.com/mattn/goveralls",
-			"revision": "a2cbbd7cdce4f5e051016fedf639c64bb05ef031",
-			"revisionTime": "2017-05-13T16:02:34Z"
+			"revision": "b71a1e4855f87991aff01c2c833a75a07059c61c",
+			"revisionTime": "2017-11-14T04:29:57Z"
 		},
 		{
 			"checksumSHA1": "90pFJb64MwgYvN5AmPVaWl87ZyU=",

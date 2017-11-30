@@ -5,20 +5,21 @@ import (
 	"strings"
 )
 
-type (
-	issueKey struct {
-		path      string
-		line, col int
-		message   string
-	}
+type issueKey struct {
+	path      string
+	line, col int
+	message   string
+}
 
-	multiIssue struct {
-		*Issue
-		linterNames []string
-	}
-)
+type multiIssue struct {
+	*Issue
+	linterNames []string
+}
 
-func aggregateIssues(issues chan *Issue) chan *Issue {
+// AggregateIssueChan reads issues from a channel, aggregates issues which have
+// the same file, line, vol, and message, and returns aggregated issues on
+// a new channel.
+func AggregateIssueChan(issues chan *Issue) chan *Issue {
 	out := make(chan *Issue, 1000000)
 	issueMap := make(map[issueKey]*multiIssue)
 	go func() {
@@ -30,18 +31,18 @@ func aggregateIssues(issues chan *Issue) chan *Issue {
 				message: issue.Message,
 			}
 			if existing, ok := issueMap[key]; ok {
-				existing.linterNames = append(existing.linterNames, issue.Linter.Name)
+				existing.linterNames = append(existing.linterNames, issue.Linter)
 			} else {
 				issueMap[key] = &multiIssue{
 					Issue:       issue,
-					linterNames: []string{issue.Linter.Name},
+					linterNames: []string{issue.Linter},
 				}
 			}
 		}
 		for _, multi := range issueMap {
 			issue := multi.Issue
 			sort.Strings(multi.linterNames)
-			issue.Linter.Name = strings.Join(multi.linterNames, ", ")
+			issue.Linter = strings.Join(multi.linterNames, ", ")
 			out <- issue
 		}
 		close(out)

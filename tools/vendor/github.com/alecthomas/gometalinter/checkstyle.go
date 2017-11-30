@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"gopkg.in/alecthomas/kingpin.v3-unstable"
+	kingpin "gopkg.in/alecthomas/kingpin.v3-unstable"
 )
 
 type checkstyleOutput struct {
@@ -52,7 +52,7 @@ func outputToCheckstyle(issues chan *Issue) int {
 			Line:     issue.Line,
 			Message:  issue.Message,
 			Severity: string(issue.Severity),
-			Source:   issue.Linter.Name,
+			Source:   issue.Linter,
 		})
 		status = 1
 	}

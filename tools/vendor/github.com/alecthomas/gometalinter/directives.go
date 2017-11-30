@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -14,6 +15,7 @@ type ignoredRange struct {
 	col        int
 	start, end int
 	linters    []string
+	matched    bool
 }
 
 func (i *ignoredRange) matches(issue *Issue) bool {
@@ -24,15 +26,23 @@ func (i *ignoredRange) matches(issue *Issue) bool {
 		return true
 	}
 	for _, l := range i.linters {
-		if l == issue.Linter.Name {
+		if l == issue.Linter {
 			return true
 		}
 	}
 	return false
 }
 
-func (i *ignoredRange) near(col, start, end int) bool {
+func (i *ignoredRange) near(col, start int) bool {
 	return col == i.col && i.end == start-1
+}
+
+func (i *ignoredRange) String() string {
+	linters := strings.Join(i.linters, ",")
+	if len(i.linters) == 0 {
+		linters = "all"
+	}
+	return fmt.Sprintf("%s:%d-%d", linters, i.start, i.end)
 }
 
 type ignoredRanges []*ignoredRange
@@ -42,15 +52,13 @@ func (ir ignoredRanges) Swap(i, j int)      { ir[i], ir[j] = ir[j], ir[i] }
 func (ir ignoredRanges) Less(i, j int) bool { return ir[i].end < ir[j].end }
 
 type directiveParser struct {
-	paths []string
 	lock  sync.Mutex
 	files map[string]ignoredRanges
 	fset  *token.FileSet
 }
 
-func newDirectiveParser(paths []string) *directiveParser {
+func newDirectiveParser() *directiveParser {
 	return &directiveParser{
-		paths: paths,
 		files: map[string]ignoredRanges{},
 		fset:  token.NewFileSet(),
 	}
@@ -68,10 +76,41 @@ func (d *directiveParser) IsIgnored(issue *Issue) bool {
 	d.lock.Unlock()
 	for _, r := range ranges {
 		if r.matches(issue) {
+			debug("nolint: matched %s to issue %s", r, issue)
+			r.matched = true
 			return true
 		}
 	}
 	return false
+}
+
+// Unmatched returns all the ranges which were never used to ignore an issue
+func (d *directiveParser) Unmatched() map[string]ignoredRanges {
+	unmatched := map[string]ignoredRanges{}
+	for path, ranges := range d.files {
+		for _, ignore := range ranges {
+			if !ignore.matched {
+				unmatched[path] = append(unmatched[path], ignore)
+			}
+		}
+	}
+	return unmatched
+}
+
+// LoadFiles from a list of directories
+func (d *directiveParser) LoadFiles(paths []string) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	filenames, err := pathsToFileGlobs(paths)
+	if err != nil {
+		return err
+	}
+	for _, filename := range filenames {
+		ranges := d.parseFile(filename)
+		sort.Sort(ranges)
+		d.files[filename] = ranges
+	}
+	return nil
 }
 
 // Takes a set of ignoredRanges, determines if they immediately precede a statement
@@ -92,7 +131,7 @@ func (a *rangeExpander) Visit(node ast.Node) ast.Visitor {
 	found := sort.Search(len(a.ranges), func(i int) bool {
 		return a.ranges[i].end+1 >= start
 	})
-	if found < len(a.ranges) && a.ranges[found].near(startPos.Column, start, end) {
+	if found < len(a.ranges) && a.ranges[found].near(startPos.Column, start) {
 		r := a.ranges[found]
 		if r.start > start {
 			r.start = start
@@ -144,12 +183,6 @@ func extractCommentGroupRange(fset *token.FileSet, comments ...*ast.CommentGroup
 	return
 }
 
-func (d *directiveParser) in(n ast.Node, issue *Issue) bool {
-	start := d.fset.Position(n.Pos())
-	end := d.fset.Position(n.End())
-	return issue.Line >= start.Line && issue.Line <= end.Line
-}
-
 func filterIssuesViaDirectives(directives *directiveParser, issues chan *Issue) chan *Issue {
 	out := make(chan *Issue, 1000000)
 	go func() {
@@ -158,7 +191,28 @@ func filterIssuesViaDirectives(directives *directiveParser, issues chan *Issue) 
 				out <- issue
 			}
 		}
+
+		if config.WarnUnmatchedDirective {
+			for _, issue := range warnOnUnusedDirective(directives) {
+				out <- issue
+			}
+		}
 		close(out)
 	}()
+	return out
+}
+
+func warnOnUnusedDirective(directives *directiveParser) []*Issue {
+	out := []*Issue{}
+	for path, ranges := range directives.Unmatched() {
+		for _, ignore := range ranges {
+			issue, _ := NewIssue("nolint", config.formatTemplate)
+			issue.Path = path
+			issue.Line = ignore.start
+			issue.Col = ignore.col
+			issue.Message = "nolint directive did not match any issue"
+			out = append(out, issue)
+		}
+	}
 	return out
 }
