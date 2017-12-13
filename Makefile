@@ -92,16 +92,23 @@ style: tools
 
 lint: tools
 	@echo Using $(CONCURRENT_LINTERS) processes
-	gometalinter -j $(CONCURRENT_LINTERS) --deadline=$(LINTER_DEADLINE) --enable-all --line-length=120 --disable=gotype $(GO_DIRS)
+	gometalinter -j $(CONCURRENT_LINTERS) \
+		--deadline=$(LINTER_DEADLINE) \
+		--enable-all \
+		--line-length=120 \
+		--disable=gotype $(GO_DIRS)
 
 fmt: tools
 	gofmt -s -w $(GO_SRC)
+	goimports -w $(GO_SRC)
 
 test: tools
 	@mkdir -p $(COVERDIR)
 	@rm -f $(COVERDIR)/*
 	for pkg in $(GO_PKGS) ; do \
-		go test -v -covermode count -coverprofile=$(COVERDIR)/$$(echo $$pkg | tr '/' '-').out $$pkg || exit 1 ; \
+		go test -v -covermode count \
+			-coverprofile=$(COVERDIR)/$$(echo $$pkg | tr '/' '-').out $$pkg || \
+			exit 1 ; \
 	done
 	gocovmerge $(shell find $(COVERDIR) -name '*.out') > cover.out
 
