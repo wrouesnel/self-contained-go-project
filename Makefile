@@ -96,6 +96,7 @@ lint: tools
 		--deadline=$(LINTER_DEADLINE) \
 		--enable-all \
 		--line-length=120 \
+		--disable=testify --disable=test \
 		--disable=gotype $(GO_DIRS)
 
 fmt: tools
