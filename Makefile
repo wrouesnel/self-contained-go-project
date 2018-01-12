@@ -113,6 +113,12 @@ test: tools
 	done
 	gocovmerge $(shell find $(COVERDIR) -name '*.out') > cover.out
 
+enter-env: tools
+	@echo "$(PRODUCT_NAME) bin environment entered."
+	@echo "Tools overridden: $(shell ls $(TOOLDIR)/bin)"
+    @/bin/bash
+	@echo "Exited $(PRODUCT_NAME) environment."
+
 clean:
 	[ ! -z $(BINDIR) ] && [ -e $(BINDIR) ] && find $(BINDIR) -print -delete || /bin/true
 	[ ! -z $(COVERDIR) ] && [ -e $(COVERDIR) ] && find $(COVERDIR) -print -delete || /bin/true
@@ -123,6 +129,6 @@ tools:
 
 autogen:
 	@echo "Installing git hooks in local repository..."
-	ln -sf $(TOOLDIR)/pre-commit .git/hooks/pre-commit
+	ln -sf ../../$(TOOLDIR)/pre-commit .git/hooks/pre-commit
 
 .PHONY: tools autogen style fmt test all release binary clean
