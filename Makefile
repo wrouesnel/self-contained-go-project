@@ -16,7 +16,7 @@ GO_DIRS := $(shell find . -path './vendor/*' -o -path './tools/*' -o -name '*.go
 # GO_PKGS is used to run tests.
 GO_PKGS := $(shell go list ./... | grep -v '/vendor/')
 # GO_CMDS is used to build command binaries (by convention assume to be anything under cmd/)
-GO_CMDS := $(shell find $(CMD_DIR) -mindepth 1 -type d -printf "%f ")
+GO_CMDS := $(shell find $(CMD_DIR) -mindepth 1 -maxdepth 1 -type d -printf "%f ")
 
 VERSION ?= $(shell git describe --dirty 2>/dev/null)
 VERSION_SHORT ?= $(shell git describe --abbrev=0 2>/dev/null)
@@ -82,7 +82,7 @@ $(PLATFORM_DIRS): $(PLATFORM_BINS)
 
 $(PLATFORM_TARS): $(RELEASEDIR)/%.tar.gz : $(BINDIR)/%
 	tar -czf $@ -C $(BINDIR) $$(basename $<)
-	
+
 release-bin: $(PLATFORM_BINS)
 
 release: $(PLATFORM_TARS)
