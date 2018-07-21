@@ -10,11 +10,18 @@ update all the external dependencies should be obvious.
 
 The default build configuration is set to a safe set of "static binary only"
 settings which should work to build pure Go projects, however if you need to
-link C libraries you'll need to enable CGO in the Makefile.
+link C libraries you'll need to enable CGO in the `magefile.go` file.
 
-## Notable Makefile Targets
+## How to build
 
-* `autogen` : autogen sets up a pre-commit hook in the local `.git` repository
-  which automatically runs gofmt on code before committing it. You might like
-  to change this to run `make style` instead to just do a style check, rather
-  then modifying files (though I find this less convenient).
+```
+$ go run mage.go
+```
+will trigger the build system and provide list of options. `go run mage.go binary`
+will build the sample app.
+
+## Notes
+
+* `gometalinter` doesn't cleanly update with `updateTools` due to the incompatible
+  changes with `kingpin.v3-unstable`. This repository has a patched version
+  committed to the lint tools.

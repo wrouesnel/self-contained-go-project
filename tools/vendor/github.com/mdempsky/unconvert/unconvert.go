@@ -26,6 +26,7 @@ import (
 
 	"github.com/kisielk/gotool"
 	"golang.org/x/text/width"
+	"golang.org/x/tools/go/buildutil"
 	"golang.org/x/tools/go/loader"
 )
 
@@ -166,13 +167,19 @@ var (
 	flagApply      = flag.Bool("apply", false, "apply edits to source files")
 	flagCPUProfile = flag.String("cpuprofile", "", "write CPU profile to file")
 	// TODO(mdempsky): Better description and maybe flag name.
-	flagSafe = flag.Bool("safe", false, "be more conservative (experimental)")
-	flagV    = flag.Bool("v", false, "verbose output")
+	flagSafe     = flag.Bool("safe", false, "be more conservative (experimental)")
+	flagV        = flag.Bool("v", false, "verbose output")
+	flagTests    = flag.Bool("tests", true, "include test source files")
+	flagFastMath = flag.Bool("fastmath", false, "remove conversions that force intermediate rounding")
 )
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "usage: unconvert [flags] [package ...]\n")
 	flag.PrintDefaults()
+}
+
+func init() {
+	flag.Var((*buildutil.TagsFlag)(&build.Default.BuildTags), "tags", buildutil.TagsFlagDoc)
 }
 
 func main() {
@@ -302,7 +309,11 @@ func computeEdits(importPaths []string, os, arch string, cgoEnabled bool) fileTo
 	conf.Build = &ctxt
 	conf.TypeChecker.Importer = noImporter{}
 	for _, importPath := range importPaths {
-		conf.Import(importPath)
+		if *flagTests {
+			conf.ImportWithTests(importPath)
+		} else {
+			conf.Import(importPath)
+		}
 	}
 	prog, err := conf.Load()
 	if err != nil {
@@ -393,6 +404,10 @@ func (v *visitor) unconvert(call *ast.CallExpr) {
 		// A real conversion.
 		return
 	}
+	if !*flagFastMath && isFloatingPoint(ft.Type) && isOperation(call.Args[0]) && isOperation(v.path[len(v.path)-2].n) {
+		// Go 1.9 gives different semantics to "T(a*b)+c" and "a*b+c".
+		return
+	}
 	if isUntypedValue(call.Args[0], &v.pkg.Info) {
 		// Workaround golang.org/issue/13061.
 		return
@@ -411,6 +426,22 @@ func (v *visitor) unconvert(call *ast.CallExpr) {
 	}
 
 	v.edits[v.file.Position(call.Lparen)] = struct{}{}
+}
+
+// isFloatingPointer reports whether t's underlying type is a floating
+// point type.
+func isFloatingPoint(t types.Type) bool {
+	ut, ok := t.Underlying().(*types.Basic)
+	return ok && ut.Info()&(types.IsFloat|types.IsComplex) != 0
+}
+
+// isOperation reports whether n is an arithmetic operation expression.
+func isOperation(n ast.Node) bool {
+	switch n.(type) {
+	case *ast.BinaryExpr, *ast.UnaryExpr:
+		return true
+	}
+	return false
 }
 
 func (v *visitor) isCgoCheckPointerContext() bool {

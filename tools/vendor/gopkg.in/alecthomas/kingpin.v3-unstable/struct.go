@@ -2,6 +2,7 @@ package kingpin
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
@@ -11,8 +12,8 @@ import (
 func (c *cmdMixin) fromStruct(clause *CmdClause, v interface{}) error { // nolint: gocyclo
 	urv := reflect.ValueOf(v)
 	rv := reflect.Indirect(reflect.ValueOf(v))
-	if rv.Kind() != reflect.Struct {
-		return fmt.Errorf("expected a struct but received " + reflect.TypeOf(v).String())
+	if rv.Kind() != reflect.Struct || !rv.CanSet() {
+		return fmt.Errorf("expected a pointer to a struct but got a " + urv.Type().String())
 	}
 	for i := 0; i < rv.NumField(); i++ {
 		// Parse out tags
@@ -45,7 +46,7 @@ func (c *cmdMixin) fromStruct(clause *CmdClause, v interface{}) error { // nolin
 		var action Action
 		onMethodName := "On" + strings.ToUpper(ft.Name[0:1]) + ft.Name[1:]
 		if actionMethod := urv.MethodByName(onMethodName); actionMethod.IsValid() {
-			action, _ = actionMethod.Interface().(func(*Application, *ParseElement, *ParseContext) error)
+			action, _ = actionMethod.Interface().(func(element *ParseElement, context *ParseContext) error)
 		}
 
 		if field.Kind() == reflect.Struct {
@@ -99,7 +100,9 @@ func (c *cmdMixin) fromStruct(clause *CmdClause, v interface{}) error { // nolin
 			clause = clause.Envar(env)
 		}
 		ptr := field.Addr().Interface()
-		if ft.Type == reflect.TypeOf(time.Duration(0)) {
+		if ft.Type == reflect.TypeOf(&url.URL{}) {
+			clause.URLVar(ptr.(**url.URL))
+		} else if ft.Type == reflect.TypeOf(time.Duration(0)) {
 			clause.DurationVar(ptr.(*time.Duration))
 		} else {
 			switch ft.Type.Kind() {
@@ -141,7 +144,9 @@ func (c *cmdMixin) fromStruct(clause *CmdClause, v interface{}) error { // nolin
 				clause.Uint64Var(ptr.(*uint64))
 
 			case reflect.Slice:
-				if ft.Type == reflect.TypeOf(time.Duration(0)) {
+				if ft.Type == reflect.TypeOf([]*url.URL{}) {
+					clause.URLListVar(ptr.(*[]*url.URL))
+				} else if ft.Type == reflect.TypeOf(time.Duration(0)) {
 					clause.DurationListVar(ptr.(*[]time.Duration))
 				} else {
 					switch ft.Type.Elem().Kind() {

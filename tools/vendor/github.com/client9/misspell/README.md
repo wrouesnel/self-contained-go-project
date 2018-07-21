@@ -8,11 +8,12 @@ Correct commonly misspelled English words... quickly.
 If you just want a binary and to start using `misspell`:
 
 ```
-curl -o ./godownloader-misspell.sh https://raw.githubusercontent.com/client9/misspell/master/godownloader-misspell.sh 
-/bin/sh ./godownloader-misspell.sh
+curl -L -o ./install-misspell.sh https://git.io/misspell
+sh ./install-misspell.sh
 ```
 
-will install as `./bin/misspell`.  You can adjust the download location using the `-b` flag.   File a ticket if you want another platform supported.
+
+Both will install as `./bin/misspell`.  You can adjust the download location using the `-b` flag.   File a ticket if you want another platform supported.
 
 
 If you use [Go](https://golang.org/), the best way to run `misspell` is by using [gometalinter](#gometalinter).  Otherwise, install `misspell` the old-fashioned way:
@@ -22,6 +23,13 @@ go get -u github.com/client9/misspell/cmd/misspell
 ```
 
 and misspell will be in your `GOPATH`
+
+
+Also if you like to live dangerously, one could do
+
+```bash
+curl -L https://git.io/misspell | bash
+```
 
 ### Usage
 
@@ -88,7 +96,7 @@ Just add the `-w` flag!
 $ misspell -w all.html your.txt important.md files.go
 your.txt:9:21:corrected "langauge" to "language"
 
-# ^booyah
+# ^ File is rewritten only if a misspelling is found
 ```
 
 <a name="locale"></a>
@@ -257,6 +265,16 @@ With some tricks you can directly pipe output to sqlite3 by using `-init /dev/st
 misspell -f sqlite * | sqlite3 -init /dev/stdin -column -cmd '.width 60 15' ':memory' \
     'select substr(file,35),typo,count(*) as count from misspell group by file, typo order by count desc;'
 ```
+
+<a name="ignore"></a>
+### How can I ignore rules?
+
+Using the `-i "comma,separated,rules"` flag you can specify corrections to ignore.
+
+For example, if you were to run `misspell -w -error -source=text` against document that contains the string `Guy Finkelshteyn Braswell`, misspell would change the text to `Guy Finkelstheyn Bras well`.  You can then
+determine the rules to ignore by reverting the change and running the with the `-debug` flag.  You can then see
+that the corrections were `htey -> they` and `aswell -> as well`. To ignore these two rules, you add `-i "htey,aswell"` to
+your command. With debug mode on, you can see it print the corrections, but it will no longer make them.
 
 <a name="output"></a>
 ### How can I change the output format?

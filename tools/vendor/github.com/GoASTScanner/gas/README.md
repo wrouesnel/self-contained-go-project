@@ -18,6 +18,10 @@ You may obtain a copy of the License [here](http://www.apache.org/licenses/LICEN
 Gas is still in alpha and accepting feedback from early adopters. We do
 not consider it production ready at this time.
 
+### Install
+
+`$ go get github.com/GoASTScanner/gas/cmd/gas/...`
+
 ### Usage
 
 Gas can be configured to only run a subset of rules, to exclude certain file
@@ -64,12 +68,8 @@ $ gas -exclude=G303 ./...
 
 #### Excluding files:
 
-Gas can be told to \ignore paths that match a supplied pattern using the 'skip' command line option. This is
-accomplished via [go-glob](github.com/ryanuber/go-glob). Multiple patterns can be specified as follows:
-
-```
-$ gas -skip=tests* -skip=*_example.go ./...
-```
+Gas will ignore dependencies in your vendor directory any files
+that are not considered build artifacts by the compiler (so test files).
 
 #### Annotating code
 
@@ -112,3 +112,4 @@ file. The output format is controlled by the '-fmt' flag, and the output file is
 # Write output in json format to results.json
 $ gas -fmt=json -out=results.json *.go
 ```
+
