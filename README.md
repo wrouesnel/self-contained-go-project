@@ -20,8 +20,19 @@ $ go run mage.go
 will trigger the build system and provide list of options. `go run mage.go binary`
 will build the sample app.
 
+## Included Tools
+
+These tools will work with go generate during builds due to path overrides in the
+magefile:
+
+* `github.com/cheekybits/genny`
+* `github.com/alvaroloes/enumer`
+* `github.com/fatih/gomodifytags`
+
 ## Notes
 
 * `gometalinter` doesn't cleanly update with `updateTools` due to the incompatible
   changes with `kingpin.v3-unstable`. This repository has a patched version
   committed to the lint tools.
+  
+

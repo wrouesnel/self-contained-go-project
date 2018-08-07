@@ -36,8 +36,8 @@ var curDir = func() string {
 }()
 
 const (
-	binRootName          = "pluto"
-	dockerImageName      = "docker.ops.teg.technology/pluto/pluto:latest"
+	binRootName          = "self-contained-go-project"
+	dockerImageName      = "self-contained-go-project"
 	constCoverageDir     = ".coverage"
 	constToolDir         = "tools"
 	constBinDir          = "bin"
@@ -61,6 +61,7 @@ var toolDir = normalizePath(path.Join(curDir, constToolDir))
 var binDir = normalizePath(path.Join(curDir, constBinDir))
 var releaseDir = normalizePath(path.Join(curDir, constReleaseDir))
 var cmdDir = normalizePath(path.Join(curDir, constCmdDir))
+var assetsDir = normalizePath(path.Join(curDir, constAssets))
 var assetsGenerated = normalizePath(path.Join(curDir, constAssetsGenerated))
 
 // Calculate file paths
@@ -324,7 +325,12 @@ func getCoreTools() []string {
 		"github.com/golang/dep",
 		"github.com/wadey/gocovmerge",
 		"github.com/mattn/goveralls",
+		"github.com/fatih/gomodifytags",
 		"github.com/tmthrgd/go-bindata/go-bindata",
+		// Code gens!
+		"github.com/cheekybits/genny",
+		"github.com/alvaroloes/enumer",
+		// Metalinter
 		"github.com/GoASTScanner/gas/cmd/gas", // workaround for Ast scanner
 		"github.com/alecthomas/gometalinter",
 	}
@@ -552,8 +558,27 @@ func Assets() error {
 		return err
 	}
 
-	return sh.RunV("go-bindata", "-pkg=assets", "-o", "assets/bindata.go", "-ignore=bindata.go",
-		"-ignore=.*.map$", "-prefix=assets/generated", "assets/generated/...")
+	// Set current directory to the asset directory
+	previousPwd, wderr := os.Getwd()
+	if wderr != nil {
+		return wderr
+	}
+	if err := os.Chdir(assetsDir); err != nil {
+		return err
+	}
+
+	err := sh.RunV("go-bindata", "-pkg=assets", "-o", "bindata.go", "-ignore=bindata.go",
+		"-ignore=.*.map$", "-ignore=\\.gitkeep", "-prefix=assets/generated", ".")
+	if err != nil {
+		return err
+	}
+
+	// change back to original working directory
+	if err := os.Chdir(previousPwd); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Lint runs gometalinter for code quality. CI will run this before accepting PRs.
@@ -834,6 +859,7 @@ func Debug() error {
 func Autogen() error {
 	fmt.Println("Installing git hooks in local repository...")
 
+	data := []byte{}
 	data, err := ioutil.ReadFile(".git/hooks/pre-commit")
 	if err != nil {
 		data = []byte("#!/bin/bash\n")
