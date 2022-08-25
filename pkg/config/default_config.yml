@@ -1,0 +1,2 @@
+# This is the default configuration of the application and is baked into the executable.
+config_key: "Value from application binary"
